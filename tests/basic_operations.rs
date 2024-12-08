@@ -1,4 +1,4 @@
-use hyde::*;
+use hyde::Tokenizer;
 
 #[macro_use]
 mod common;

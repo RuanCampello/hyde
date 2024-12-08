@@ -26,7 +26,6 @@ impl<'a> Tokenizer<'a> {
     // TODO make prepositions optional
     pub fn parse_and_evaluate(&self, prepositions: &HashMap<char, bool>) -> Result<bool, String> {
         let tokens: Vec<Token> = self.tokenize();
-        println!("tokens {tokens:#?}");
 
         let mut operators: Vec<&Token> = Vec::new();
         let mut output: Vec<bool> = Vec::new();

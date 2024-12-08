@@ -1,7 +1,7 @@
+use hyde::Tokenizer;
+
 #[macro_use]
 mod common;
-
-use hyde::*;
 
 test_operation!(
     compound_one,
