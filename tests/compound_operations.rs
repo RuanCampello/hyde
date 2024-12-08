@@ -1,13 +1,19 @@
+#[macro_use]
+mod common;
+
 use hyde::*;
-use std::collections::HashMap;
 
-#[test]
-fn compound_one() {
-    let tokenizer = Tokenizer::new("p∧(¬p∨q)");
-    let mut prep: HashMap<char, bool> = HashMap::new();
-    prep.insert('p', true);
-    prep.insert('q', false);
+test_operation!(
+    compound_one,
+    "p∧(¬p∨q)", [{ 'p': true, 'q': false } => false, "it must return false"]
+);
 
-    let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-    assert!(!result);
-}
+test_operation!(
+    compound_two,
+    "¬p ∧ q", [{ 'p': false, 'q': true } => true, "it must return true"]
+);
+
+test_operation!(
+    compound_three,
+    "¬p ∨ ¬q", [{ 'p': true, 'q': false } => true, "it must return true"]
+);
