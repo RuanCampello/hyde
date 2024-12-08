@@ -45,3 +45,12 @@ test_operation!(
         { 'p': false, 'q': false } => true, "if p is false, the condition does not matter. This must return true"
     ]
 );
+
+test_operation!(
+    bicondition_operation,
+    "p↔q",
+    [
+        {'p': true, 'q': false } => false, "both values must be equal. it must return false",
+        {'p': false, 'q': false } => true, "if they're equal, either true or false, it must return true"
+    ]
+);
