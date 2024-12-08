@@ -7,6 +7,7 @@ enum Token {
     Disjunction,
     Conditional,
     Biconditional,
+    ExclusiveDisjunction,
     Negation,
     LeftParen,
     RightParen,
@@ -80,6 +81,7 @@ impl<'a> Tokenizer<'a> {
                 '¬' => Some(Token::Negation),
                 '→' => Some(Token::Conditional),
                 '↔' => Some(Token::Biconditional),
+                '⊻' => Some(Token::ExclusiveDisjunction),
                 '(' => Some(Token::LeftParen),
                 ')' => Some(Token::RightParen),
                 c if c.is_alphabetic() => Some(Token::Exp(c)),
@@ -96,6 +98,7 @@ impl<'a> Tokenizer<'a> {
             Token::Disjunction => 3,
             Token::Conditional => 4,
             Token::Biconditional => 5,
+            Token::ExclusiveDisjunction => 6,
             _ => 0, // in case of parenthesis
         }
     }
@@ -113,7 +116,7 @@ impl<'a> Tokenizer<'a> {
             Token::Disjunction => stack.push(left || right),
             Token::Conditional => stack.push(!left || right),
             Token::Biconditional => stack.push(left == right),
-            // TODO exclusive disjunction...
+            Token::ExclusiveDisjunction => stack.push(left != right), 
             _ => return Err("Unexpected operator".into()),
         }
         Ok(())

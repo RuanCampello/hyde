@@ -54,3 +54,12 @@ test_operation!(
         {'p': false, 'q': false } => true, "if they're equal, either true or false, it must return true"
     ]
 );
+
+test_operation!(
+    exclusive_disjunction_operation,
+    "p⊻q",
+    [
+        {'p': true, 'q': false } => true, "both values must be different. it must return true",
+        {'p': true, 'q': true } => false, "if they're equal, either true or false, it must return false"
+    ]
+);
