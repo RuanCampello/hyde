@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum Token {
     Exp(char),
     Conjunction,
@@ -26,6 +26,7 @@ impl<'a> Tokenizer<'a> {
     // TODO make prepositions optional
     pub fn parse_and_evaluate(&self, prepositions: &HashMap<char, bool>) -> Result<bool, String> {
         let tokens: Vec<Token> = self.tokenize();
+        println!("tokens {tokens:#?}");
 
         let mut operators: Vec<&Token> = Vec::new();
         let mut output: Vec<bool> = Vec::new();
@@ -105,19 +106,24 @@ impl<'a> Tokenizer<'a> {
 
     /// Applies the operation on the operands and remove them from the to-do operations stack.
     fn apply_operator(op: &Token, stack: &mut Vec<bool>) -> Result<(), String> {
-        let (left, right) = Self::get_operands(stack)?;
-
         match op {
             Token::Negation => {
-                let operand = stack.pop().ok_or("Missing operand for NOT")?;
-                stack.push(!operand);
+                if let Some(operand) = stack.pop() {
+                    stack.push(!operand);
+                }
             }
-            Token::Conjunction => stack.push(left && right),
-            Token::Disjunction => stack.push(left || right),
-            Token::Conditional => stack.push(!left || right),
-            Token::Biconditional => stack.push(left == right),
-            Token::ExclusiveDisjunction => stack.push(left != right), 
-            _ => return Err("Unexpected operator".into()),
+            _ => {
+                let (left, right) = Self::get_operands(stack)?;
+                match op {
+                    Token::Conjunction => stack.push(left && right),
+                    Token::Disjunction => stack.push(left || right),
+                    Token::Conditional => stack.push(!left || right),
+                    Token::Biconditional => stack.push(left == right),
+                    Token::ExclusiveDisjunction => stack.push(left != right),
+
+                    _ => return Err("Unexpected operator".into()),
+                }
+            }
         }
         Ok(())
     }
@@ -129,8 +135,8 @@ impl<'a> Tokenizer<'a> {
 
     /// Returns the left and right operands, if present.
     fn get_operands(stack: &mut Vec<bool>) -> Result<(bool, bool), String> {
-        let right = stack.pop().ok_or("Missing right operand for OR")?;
-        let left = stack.pop().ok_or("Missing left operand for OR")?;
+        let right = stack.pop().ok_or("Missing right operand")?;
+        let left = stack.pop().ok_or("Missing left operand")?;
         Ok((left, right))
     }
 }
