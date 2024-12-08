@@ -55,7 +55,7 @@ impl<'a> Tokenizer<'a> {
             }
             _ => {
                 while operators.last().map_or(false, |&top_op| {
-                    Self::precedence(top_op) >= Self::precedence(token)
+                    Self::precedence(top_op) <= Self::precedence(token)
                         && *top_op != Token::LeftParen
                 }) {
                     let op = operators.pop().unwrap();
