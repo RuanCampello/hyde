@@ -102,22 +102,18 @@ impl<'a> Tokenizer<'a> {
 
     /// Applies the operation on the operands and remove them from the to-do operations stack.
     fn apply_operator(op: &Token, stack: &mut Vec<bool>) -> Result<(), String> {
+        let (left, right) = Self::get_operands(stack)?;
+
         match op {
             Token::Negation => {
                 let operand = stack.pop().ok_or("Missing operand for NOT")?;
                 stack.push(!operand);
             }
-            Token::Conjunction => {
-                let right = stack.pop().ok_or("Missing right operand for AND")?;
-                let left = stack.pop().ok_or("Missing left operand for AND")?;
-                stack.push(left && right);
-            }
-            Token::Disjunction => {
-                let right = stack.pop().ok_or("Missing right operand for OR")?;
-                let left = stack.pop().ok_or("Missing left operand for OR")?;
-                stack.push(left || right);
-            }
-            // TODO other operations...
+            Token::Conjunction => stack.push(left && right),
+            Token::Disjunction => stack.push(left || right),
+            Token::Conditional => stack.push(!left || right),
+            Token::Biconditional => stack.push(left == right),
+            // TODO exclusive disjunction...
             _ => return Err("Unexpected operator".into()),
         }
         Ok(())
@@ -126,6 +122,13 @@ impl<'a> Tokenizer<'a> {
     /// Replaces the current operation to reuse the tokenizer for tests.
     fn replace_expr(&mut self, new_expression: &'a str) {
         self.expression = new_expression;
+    }
+
+    /// Returns the left and right operands, if present.
+    fn get_operands(stack: &mut Vec<bool>) -> Result<(bool, bool), String> {
+        let right = stack.pop().ok_or("Missing right operand for OR")?;
+        let left = stack.pop().ok_or("Missing left operand for OR")?;
+        Ok((left, right))
     }
 }
 
@@ -165,5 +168,22 @@ mod tests {
         // if both p and q are false, it must return false.
         let result = tokenizer.parse_and_evaluate(&prep).unwrap();
         assert!(!result);
+    }
+
+    #[test]
+    fn condition_operation() {
+        let tokenizer = Tokenizer::new("p→q");
+        
+        let mut prep: HashMap<char, bool> = HashMap::new();
+        prep.insert('p', true);
+        prep.insert('q', false);
+        // if the preposition A is true, condition B must true. TRUE → FALSE must return false.
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(!result);
+        
+        // if the preposition A is false, the condition does not matter. This must return true.
+        prep.insert('p', false);
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(result);
     }
 }
