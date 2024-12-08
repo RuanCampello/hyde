@@ -122,6 +122,11 @@ impl<'a> Tokenizer<'a> {
         }
         Ok(())
     }
+
+    /// Replaces the current operation to reuse the tokenizer for tests.
+    fn replace_expr(&mut self, new_expression: &'a str) {
+        self.expression = new_expression;
+    }
 }
 
 #[cfg(test)]
@@ -129,16 +134,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn basic_operations() {
-        let exp = "p∨q";
-        let tokenizer = Tokenizer::new(exp);
+    fn conjunction_operation() {
+        let tokenizer = Tokenizer::new("p∧q");
 
         let mut prep: HashMap<char, bool> = HashMap::new();
         prep.insert('p', true);
         prep.insert('q', false);
+        // if either p or q is false, it must return false.
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(!result);
 
-        let result = tokenizer.parse_and_evaluate(&prep);
+        prep.insert('q', true);
+        // if both are p and q are true, it must return true.
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(result);
+    }
 
-        assert!(result.unwrap());
+    #[test]
+    fn disjunction_operation() {
+        let tokenizer = Tokenizer::new("p∨q");
+
+        let mut prep: HashMap<char, bool> = HashMap::new();
+        prep.insert('p', true);
+        prep.insert('q', false);
+        // if either of p and q is true, it must return true.
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(result);
+
+        prep.insert('p', false);
+        // if both p and q are false, it must return false.
+        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+        assert!(!result);
     }
 }
