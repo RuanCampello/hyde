@@ -132,58 +132,53 @@ impl<'a> Tokenizer<'a> {
     }
 }
 
+#[allow(unused_macros)]
+macro_rules! test_operation {
+    ($name:ident, $expression:expr, [ $( { $($var:tt : $val:expr),* } => $expected:expr, $comment:expr ),* $(,)? ]) => {
+        #[test]
+        fn $name() {
+            let tokenizer = Tokenizer::new($expression);
+
+            $(
+                let mut prep = std::collections::HashMap::new();
+                $(
+                    prep.insert($var, $val);
+                )*
+                let result = tokenizer.parse_and_evaluate(&prep).unwrap();
+                assert_eq!(result, $expected, "Failed on input: {:?}. Comment: {}", prep, $comment);
+            )*
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn conjunction_operation() {
-        let tokenizer = Tokenizer::new("p∧q");
+    test_operation!(
+        conjunction_operation,
+        "p∧q",
+        [
+            { 'p': true, 'q': false } => false, "if either p or q is false, it must return false",
+            { 'p': true, 'q': true } => true, "if both p and q are true, it must return true"
+        ]
+    );
 
-        let mut prep: HashMap<char, bool> = HashMap::new();
-        prep.insert('p', true);
-        prep.insert('q', false);
-        // if either p or q is false, it must return false.
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(!result);
+    test_operation!(
+        disjunction_operation,
+        "p∨q",
+        [
+            { 'p': true, 'q': false } => true, "if either of p or q is true, it must return true",
+            { 'p': false, 'q': false } => false, "if both p and q are false, it must return false"
+        ]
+    );
 
-        prep.insert('q', true);
-        // if both are p and q are true, it must return true.
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(result);
-    }
-
-    #[test]
-    fn disjunction_operation() {
-        let tokenizer = Tokenizer::new("p∨q");
-
-        let mut prep: HashMap<char, bool> = HashMap::new();
-        prep.insert('p', true);
-        prep.insert('q', false);
-        // if either of p and q is true, it must return true.
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(result);
-
-        prep.insert('p', false);
-        // if both p and q are false, it must return false.
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(!result);
-    }
-
-    #[test]
-    fn condition_operation() {
-        let tokenizer = Tokenizer::new("p→q");
-        
-        let mut prep: HashMap<char, bool> = HashMap::new();
-        prep.insert('p', true);
-        prep.insert('q', false);
-        // if the preposition A is true, condition B must true. TRUE → FALSE must return false.
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(!result);
-        
-        // if the preposition A is false, the condition does not matter. This must return true.
-        prep.insert('p', false);
-        let result = tokenizer.parse_and_evaluate(&prep).unwrap();
-        assert!(result);
-    }
+    test_operation!(
+        condition_operation,
+        "p→q",
+        [
+            { 'p': true, 'q': false } => false, "if p is true, q must also be true. TRUE → FALSE must return false",
+            { 'p': false, 'q': false } => true, "if p is false, the condition does not matter. This must return true"
+        ]
+    );
 }
